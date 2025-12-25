@@ -38,16 +38,21 @@ func (s *TitleScene) Update(dt float32) {
 func (s *TitleScene) Draw() {
 	tic80.Cls(0)
 
-	// タイトルロゴ的な表示
-	tic80.Print("GOLANG GAME 251130", 60, 50, tic80.NewPrintOptions().SetColor(12).SetScale(1))
+	// タイトルロゴ
+	// "Gopher the Channel Miner" (24 chars * 6 = 144px width). (240-144)/2 = 48
+	tic80.Print("Gopher the Channel Miner", 48, 30, tic80.NewPrintOptions().SetColor(3).SetScale(1))
 
-	// 点滅する "PRESS Z TO START"
+	// 点滅する "PRESS B TO START"
 	if (s.ticks/30)%2 == 0 {
-		tic80.Print("PRESS Z TO START", 75, 80, tic80.NewPrintOptions().SetColor(15))
+		tic80.Print("PRESS B TO START", 75, 60, tic80.NewPrintOptions().SetColor(12))
 	}
 
 	// 操作説明など
-	tic80.Print("B: MOVE UPPER PLAYER", 10, 110, tic80.NewPrintOptions().SetColor(13))
-	tic80.Print("A: MOVE LOWER PLAYER", 10, 120, tic80.NewPrintOptions().SetColor(13))
-	tic80.Print("X: SWAP PICKAXE", 10, 130, tic80.NewPrintOptions().SetColor(13))
+	tic80.Print("B: MOVE UPPER PLAYER", 60, 85, tic80.NewPrintOptions().SetColor(11))
+	tic80.Print("A: MOVE LOWER PLAYER", 60, 95, tic80.NewPrintOptions().SetColor(9))
+	tic80.Print("X: SWAP PICKAXE", 60, 105, tic80.NewPrintOptions().SetColor(4))
+
+	// Gopher Copyright
+	tic80.Print("The Go gopher was designed", 45, 120, tic80.NewPrintOptions().SetColor(14))
+	tic80.Print("by Renee French", 75, 128, tic80.NewPrintOptions().SetColor(14))
 }

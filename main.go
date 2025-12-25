@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/sorucoder/tic80"
+
 	"GolangGame251130/internal/game"
 	"GolangGame251130/internal/game/generators"
 )
@@ -9,16 +11,14 @@ var sm *game.SceneManager
 
 //go:export BOOT
 func BOOT() {
+	tic80.Initialize()
+
 	sm = game.NewSceneManager()
 
-	// Level Generator Factory define
-	// どちらを使うかここで切り替え
 	genFactory := func() game.LevelGenerator {
-		// return generators.NewPatternGenerator()
-		return generators.NewRuleBasedGenerator()
+		return generators.NewPathGenerator()
 	}
 
-	// TitleSceneにFactoryを渡す
 	sm.ChangeScene(game.NewTitleScene(sm, genFactory))
 }
 

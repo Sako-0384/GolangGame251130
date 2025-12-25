@@ -1288,11 +1288,11 @@ func Tstamp() uint32 {
 	return rawTstamp()
 }
 
-// Start is a workaround to allow TIC-80 to run Go code.
+// Initialize is a workaround to allow TIC-80 to run Go code.
 // This should be the first function run in BOOT.
 //
-//go:linkname Start _start
-func Start()
+//go:linkname Initialize _initialize
+func Initialize()
 
 //go:export main.main
 func main() {}

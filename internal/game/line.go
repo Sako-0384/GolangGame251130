@@ -36,11 +36,6 @@ func (l *Line) Update(dt float32) {
 
 		// 衝突判定
 		if l.items[i].CollidesWith(playerPos, playerWidth, playerHeight) {
-			// デバッグ: 衝突情報を表示
-			itemType := "Food"
-			if l.items[i].IsObstacle() {
-				itemType = "Rock"
-			}
 			hasPickaxe := l.game.HasPickaxe(l.lineIndex)
 
 			// 衝突した場合の処理
@@ -61,10 +56,8 @@ func (l *Line) Update(dt float32) {
 						for k := 0; k < 10; k++ {
 							l.game.AddEffect(NewParticleEffect(playerPos.X+8, playerPos.Y+8, 14)) // 14=Yellow
 						}
-						tic80.Trace("P"+intToString(l.lineIndex+1)+": GoldRock DESTROYED! (+500 Score)", tic80.NewTraceOptions())
 					} else {
 						// Normal Rock
-						tic80.Trace("P"+intToString(l.lineIndex+1)+": "+itemType+" HIT! (Pickaxe: DESTROY)", tic80.NewTraceOptions())
 						// SFX: Normal Rock Destroy (12)
 						tic80.Sfx(tic80.NewSoundEffectOptions().SetId(12).SetNote(64))
 						// パーティクルを散らす (グレー: 13)
@@ -75,7 +68,6 @@ func (l *Line) Update(dt float32) {
 					continue
 				} else {
 					// ツルハシ非所持 または HardRock: エネルギー減少
-					tic80.Trace("P"+intToString(l.lineIndex+1)+": "+itemType+" HIT! (DAMAGE)", tic80.NewTraceOptions())
 					l.game.AddEnergy(-30) // エネルギー減少
 					l.game.AddEffect(NewFloatingTextEffect("-30", playerPos.X, playerPos.Y-10, 6)) // 6=Red
 					// SFX: Rock Damage (10)
@@ -85,7 +77,6 @@ func (l *Line) Update(dt float32) {
 				}
 			} else {
 				// Food: 取得して削除
-				tic80.Trace("P" + intToString(l.lineIndex+1) + ": " + itemType + " GET!", tic80.NewTraceOptions())
 				l.game.AddEnergy(20) // エネルギー回復
 				l.game.AddEffect(NewFloatingTextEffect("+20", playerPos.X, playerPos.Y-10, 11)) // 11=Cyan/Greenish
 				// SFX: Food (08)
