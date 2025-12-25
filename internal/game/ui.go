@@ -21,7 +21,7 @@ func (g *Game) DrawUI() {
 
 	// --- Column 2: Progress Bar ---
 	progressWidth := 70
-	progressX := 85 // 80 + マージン
+	progressX := 85
 	progressHeight := 6
 
 	// 背景
@@ -38,14 +38,14 @@ func (g *Game) DrawUI() {
 		progress = 0
 	}
 	fillWidth := int(float32(progressWidth) * progress)
-	tic80.Rect(progressX, baseY, fillWidth, progressHeight, 11) // 水色
+	tic80.Rect(progressX, baseY, fillWidth, progressHeight, 11)
 
 	// ゴールアイコン
 	tic80.Print("G", progressX+progressWidth+2, baseY, tic80.NewPrintOptions().SetColor(12).TogglePage())
 
 	// --- Column 3: Energy Bar ---
 	energyWidth := 70
-	energyX := 165 // 160 + マージン
+	energyX := 165
 	energyHeight := 6
 
 	// 背景
@@ -54,20 +54,21 @@ func (g *Game) DrawUI() {
 	tic80.Rectb(energyX-1, baseY-1, energyWidth+2, energyHeight+2, 12)
 
 	// エネルギーバー
-	energyPercent := g.energy / 200.0
-	if energyPercent > 1.0 {
-		energyPercent = 1.0
-	}
-
 	if g.energy <= 100 {
 		// 0-100: 緑
 		tic80.Rect(energyX, baseY, int(float32(energyWidth)*(g.energy/100.0)), energyHeight, 5)
-	} else {
+	} else if g.energy <= 200 {
 		// 0-100: 緑
 		tic80.Rect(energyX, baseY, energyWidth, energyHeight, 5)
 		// 100-200: 黄
 		overWidth := int(float32(energyWidth) * ((g.energy - 100.0) / 100.0))
-		tic80.Rect(energyX, baseY, overWidth, energyHeight, 14)
+		tic80.Rect(energyX, baseY, overWidth, energyHeight, 4)
+	} else {
+		// 100-200: 黄
+		tic80.Rect(energyX, baseY, energyWidth, energyHeight, 4)
+		// 200-300: 橙
+		overWidth := int(float32(energyWidth) * ((g.energy - 200.0) / 100.0))
+		tic80.Rect(energyX, baseY, overWidth, energyHeight, 3)
 	}
 
 	// 数値

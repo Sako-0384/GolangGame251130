@@ -13,6 +13,9 @@ var sm *game.SceneManager
 func BOOT() {
 	tic80.Initialize()
 
+	// reset rng seed
+	ts := tic80.Tstamp()
+	game.SetRandomSeed(ts)
 	sm = game.NewSceneManager()
 
 	genFactory := func() game.LevelGenerator {

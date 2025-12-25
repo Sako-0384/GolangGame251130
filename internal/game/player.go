@@ -8,17 +8,17 @@ type Player struct {
 	velocity Vector2d
 	position Vector2d
 	animTime float32
-	
+
 	// Visual Effects
-	hurtTimer    float32
-	lastHolePos  Vector2d
+	hurtTimer   float32
+	lastHolePos Vector2d
 }
 
 func NewPlayer(line *Line) *Player {
 	return &Player{
-		line:     line,
-		velocity: Vector2d{0, 0},
-		position: Vector2d{120, line.GetY()}, // 初期X座標を120に変更
+		line:        line,
+		velocity:    Vector2d{0, 0},
+		position:    Vector2d{120, line.GetY()}, // 初期X座標を120に変更
 		lastHolePos: Vector2d{120, line.GetY()},
 	}
 }
@@ -29,11 +29,11 @@ func (p *Player) Update(dt float32) {
 
 	p.velocity = Vector2d{dx, dy}
 	p.position = p.position.Add(p.velocity)
-	
+
 	// Y座標をLineのレーンに同期（スムーズな移動）
 	targetY := p.line.GetY()
 	const moveSpeedY = 4.0 // 1フレームあたりの移動ピクセル数
-	
+
 	if p.position.Y < targetY {
 		p.position.Y += moveSpeedY
 		if p.position.Y > targetY {
@@ -78,7 +78,7 @@ func (p *Player) getAnimFrame() int {
 			return 288
 		}
 	}
-	
+
 	// 上のプレイヤー（lineIndex = 0）は従来のスプライト
 	switch {
 	case p.hurtTimer > 0:
@@ -96,22 +96,19 @@ func (p *Player) Draw(camera *Camera) {
 	// Wiggle Effect (ダメージ時)
 	drawPos := p.position
 	if p.hurtTimer > 0 {
-		// xorShiftを使う
-		// 線形減衰: hurtTimer (0.5 -> 0) に比例させる
-		// p.hurtTimer * 4.0 で 最大値 2.0 (range -1 ~ 1) になる
 		magnitude := p.hurtTimer * 8.0
-		offsetX := (xorShift() - 0.5) * magnitude
-		offsetY := (xorShift() - 0.5) * magnitude
-		
+		offsetX := (RandomFloat32() - 0.5) * magnitude
+		offsetY := (RandomFloat32() - 0.5) * magnitude
+
 		drawPos = drawPos.Add(Vector2d{offsetX, offsetY})
 	}
 
 	// カメラのメソッドを使ってワールド座標をスクリーン座標に変換
 	screenPos := camera.WorldToScreen(drawPos)
-	
+
 	// スプライト描画 (Roundを使って座標丸め)
 	tic80.Spr(p.getAnimFrame(), Round(screenPos.X), Round(screenPos.Y), tic80.NewSpriteOptions().AddTransparentColor(14).SetScale(1).SetSize(2, 2))
-	
+
 	// ツルハシ描画
 	if p.line.game.HasPickaxe(p.line.lineIndex) {
 		// プレイヤーのアニメーションに合わせて上下させる

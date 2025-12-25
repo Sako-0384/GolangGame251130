@@ -53,7 +53,6 @@ func (i *BaseItem) IsExpired() bool {
 }
 
 // AABB衝突判定
-// AABB衝突判定
 func (i *BaseItem) CollidesWith(pos Vector2d, width, height int) bool {
 	return i.Position.X < pos.X+float32(width) &&
 		i.Position.X+float32(i.width) > pos.X &&

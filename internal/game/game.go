@@ -23,12 +23,12 @@ type Game struct {
 	camera        Camera
 	spawner       LevelGenerator
 	genFactory    GeneratorFactory // タイトル画面に戻るために必要
-	pickaxeOwner  int     // ツルハシの所持者 (0=プレイヤー1, 1=プレイヤー2)
-	energy        float32 // エネルギー（ライフ）
-	gameOver      bool    // ゲームオーバーフラグ
-	goalDistance  float32 // ゴールまでの距離
-	totalDistance float32 // 実際の総移動距離
-	level         int     // 現在のレベル（周回数 + 1）
+	pickaxeOwner  int              // ツルハシの所持者 (0=プレイヤー1, 1=プレイヤー2)
+	energy        float32          // エネルギー（ライフ）
+	gameOver      bool             // ゲームオーバーフラグ
+	goalDistance  float32          // ゴールまでの距離
+	totalDistance float32          // 実際の総移動距離
+	level         int              // 現在のレベル（周回数 + 1）
 	effects       *EffectManager
 	bgEffects     *EffectManager
 	sceneManager  *SceneManager
@@ -42,8 +42,8 @@ func NewGame(genFactory GeneratorFactory) *Game {
 		camera:        Camera{Position: Vector2d{0, 0}, Scale: 1.0},
 		spawner:       genFactory(),
 		genFactory:    genFactory,
-		pickaxeOwner:  0,                     // 初期はプレイヤー1がツルハシを所持
-		energy:        100,                   // 初期エネルギー
+		pickaxeOwner:  0,   // 初期はプレイヤー1がツルハシを所持
+		energy:        100, // 初期エネルギー
 		gameOver:      false,
 		goalDistance:  3000, // ゴール地点 (3000ピクセル)
 		totalDistance: 0,
@@ -82,7 +82,7 @@ func (g *Game) Update(dt float32) {
 		if tic80.Btnp(tic80.BUTTON_A, 60000, 60000) || tic80.Btnp(tic80.BUTTON_B, 60000, 60000) {
 			if g.sceneManager != nil {
 				g.sceneManager.ChangeScene(NewTitleScene(g.sceneManager, g.genFactory))
-			}	
+			}
 		}
 		return
 	}
@@ -95,15 +95,15 @@ func (g *Game) Update(dt float32) {
 	if g.totalDistance >= g.goalDistance {
 		g.totalDistance -= g.goalDistance
 		g.level++
-		
+
 		// レベルアップ処理
 		// スピード上昇: レベルごとに +8
 		g.speed = 64.0 + float32(g.level-1)*8.0
-		
+
 		// エフェクト表示 (画面中央付近に)
 		centerX := g.camera.Position.X
-		g.AddEffect(NewFloatingTextEffect("LEVEL "+intToString(g.level), centerX, 60, 12))
-		
+		g.AddEffect(NewPoppingTextEffect("LEVEL "+intToString(g.level), centerX, 60, 12))
+
 		// SFX: Level Up (24)
 		tic80.Sfx(tic80.NewSoundEffectOptions().SetId(24).SetNote(52))
 
@@ -133,20 +133,20 @@ func (g *Game) Update(dt float32) {
 	if tic80.Btnp(tic80.BUTTON_X, 60000, 60000) {
 		oldOwner := g.pickaxeOwner
 		g.pickaxeOwner = 1 - g.pickaxeOwner // 0→1, 1→0 に切り替え
-		
+
 		// 受け渡しエフェクト発生
 		// 両プレイヤーの位置を取得
 		if len(g.lines) >= 2 {
 			p1 := g.lines[oldOwner].player.position
 			p2 := g.lines[g.pickaxeOwner].player.position
-			
+
 			// ツルハシの位置（プレイヤー右側）に合わせる
 			offset := Vector2d{20, 8}
 			p1 = p1.Add(offset)
 			p2 = p2.Add(offset)
-			
+
 			g.AddEffect(NewTransferEffect(p1, p2, g.speed))
-			
+
 			// SFX: Pickaxe Transfer (14) Note: 57
 			tic80.Sfx(tic80.NewSoundEffectOptions().SetId(14).SetNote(57))
 		}
@@ -177,7 +177,6 @@ func (g *Game) Update(dt float32) {
 		g.camera.Position.X = frontmostX + offset
 	}
 
-
 	// 座標リセット（float丸め誤差対策）
 	// カメラX座標が1000を超えたら、全ての座標を平行移動
 	if g.camera.Position.X > 1000 {
@@ -202,7 +201,7 @@ func (g *Game) Update(dt float32) {
 				g.lines[i].items[j].SetPosition(pos)
 			}
 		}
-		
+
 		// エフェクトの座標をリセット
 		g.effects.OnCoordinateReset(resetOffset)
 		g.bgEffects.OnCoordinateReset(resetOffset)
@@ -222,8 +221,8 @@ func (g *Game) HasPickaxe(lineIndex int) bool {
 // AddEnergy はエネルギーを追加する（Foodの取得時など）
 func (g *Game) AddEnergy(amount float32) {
 	g.energy += amount
-	if g.energy > 200 {
-		g.energy = 200
+	if g.energy > 300 {
+		g.energy = 300
 	}
 	if g.energy <= 0 {
 		g.energy = 0
@@ -238,11 +237,6 @@ func (g *Game) spawnItems() {
 	}
 }
 
-// SetSpawner はLevelGeneratorを切り替える（デバッグ用）
-func (g *Game) SetSpawner(spawner LevelGenerator) {
-	g.spawner = spawner
-}
-
 func (g *Game) Draw() {
 	tic80.Cls(13)
 
@@ -253,7 +247,7 @@ func (g *Game) Draw() {
 	startWorldX := g.camera.Position.X - 120
 	// Roundを使って整数座標に丸める（スプライトと合わせるため）
 	startWorldX_Int := Round(startWorldX)
-	
+
 	tileX := startWorldX_Int / 8
 	offsetX := startWorldX_Int % 8
 	// 負の剰余の補正
@@ -279,7 +273,7 @@ func (g *Game) Draw() {
 
 		// 1. 右端部分
 		tic80.Map(tic80.NewMapOptions().SetOffset(mapX, 0).SetSize(firstChunkWidth, 18).SetPosition(-offsetX, 0))
-		
+
 		// 2. 左端部分（折り返し）
 		// 描画位置は -offsetX + (firstChunkWidth * 8)
 		tic80.Map(tic80.NewMapOptions().SetOffset(0, 0).SetSize(secondChunkWidth, 18).SetPosition(-offsetX+(firstChunkWidth*8), 0))
@@ -307,20 +301,4 @@ func (g *Game) AddEffect(e Effect) {
 // AddBackgroundEffect は背景エフェクトを追加する
 func (g *Game) AddBackgroundEffect(e Effect) {
 	g.bgEffects.Add(e)
-}
-
-// デバッグ用: 整数を文字列に変換
-func intToString(i int) string {
-	if i == 0 {
-		return "0"
-	}
-	if i < 0 {
-		return "-" + intToString(-i)
-	}
-	s := ""
-	for i > 0 {
-		s = string(rune('0'+i%10)) + s
-		i /= 10
-	}
-	return s
 }

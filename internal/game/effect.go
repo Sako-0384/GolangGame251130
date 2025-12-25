@@ -48,8 +48,8 @@ func (em *EffectManager) OnCoordinateReset(offsetX float32) {
 	}
 }
 
-// FloatingTextEffect は上に浮かび上がるテキスト
-type FloatingTextEffect struct {
+// PoppingTextEffect は上に浮かび上がるテキスト
+type PoppingTextEffect struct {
 	text     string
 	position Vector2d
 	color    int
@@ -57,34 +57,31 @@ type FloatingTextEffect struct {
 	maxLife  float32
 }
 
-func NewFloatingTextEffect(text string, x, y float32, color int) *FloatingTextEffect {
-	return &FloatingTextEffect{
+func NewPoppingTextEffect(text string, x, y float32, color int) *PoppingTextEffect {
+	return &PoppingTextEffect{
 		text:     text,
 		position: Vector2d{x, y},
 		color:    color,
 		lifeTime: 0,
-		maxLife:  1.5, // 1.5秒で消える
+		maxLife:  0.7,
 	}
 }
 
-func (e *FloatingTextEffect) Update(dt float32) bool {
+func (e *PoppingTextEffect) Update(dt float32) bool {
 	e.lifeTime += dt
-	e.position.Y -= 20 * dt // 上昇
 	return e.lifeTime < e.maxLife
 }
 
-func (e *FloatingTextEffect) Draw(camera *Camera) {
-	// 点滅効果（終了間際）
+func (e *PoppingTextEffect) Draw(camera *Camera) {
 	if e.lifeTime > e.maxLife*0.8 && int(e.lifeTime*20)%2 == 0 {
 		return
 	}
-	
+
 	screenPos := camera.WorldToScreen(e.position)
-	// DrawOutlinedTextはdraw_utils.goで定義する
-	DrawWavyText(e.text, Round(screenPos.X), Round(screenPos.Y), e.color, 0, e.lifeTime)
+	DrawPoppingText(e.text, Round(screenPos.X), Round(screenPos.Y), e.color, 0, e.lifeTime)
 }
 
-func (e *FloatingTextEffect) OnCoordinateReset(offsetX float32) {
+func (e *PoppingTextEffect) OnCoordinateReset(offsetX float32) {
 	e.position.X -= offsetX
 }
 
@@ -98,9 +95,8 @@ type ParticleEffect struct {
 }
 
 func NewParticleEffect(x, y float32, color int) *ParticleEffect {
-	// ランダムな速度 (XorShift)
-	vx := (xorShift() - 0.5) * 60
-	vy := (xorShift() - 0.5) * 60 - 30 // 少し上向き
+	vx := (RandomFloat32() - 0.5) * 60
+	vy := (RandomFloat32()-0.5)*60 - 30
 	return &ParticleEffect{
 		position: Vector2d{x, y},
 		velocity: Vector2d{vx, vy},
@@ -126,11 +122,11 @@ func (e *ParticleEffect) OnCoordinateReset(offsetX float32) {
 	e.position.X -= offsetX
 }
 
-// TransferEffect はプレイヤー間の受け渡しエフェクト（稲妻のようなライン）
+// TransferEffect はプレイヤー間の受け渡しエフェクト
 type TransferEffect struct {
 	start    Vector2d
 	end      Vector2d
-	speed    float32 // プレイヤー移動速度に追従するため
+	speed    float32
 	lifeTime float32
 	maxLife  float32
 }
@@ -141,7 +137,7 @@ func NewTransferEffect(start, end Vector2d, speed float32) *TransferEffect {
 		end:      end,
 		speed:    speed,
 		lifeTime: 0,
-		maxLife:  0.2, // 0.2秒間表示
+		maxLife:  0.2,
 	}
 }
 
@@ -157,20 +153,18 @@ func (e *TransferEffect) Update(dt float32) bool {
 func (e *TransferEffect) Draw(camera *Camera) {
 	startPos := camera.WorldToScreen(e.start)
 	endPos := camera.WorldToScreen(e.end)
-	
+
 	gradient := []int{12, 8, 3, 4, 5, 6, 10}
-	
+
 	count := len(gradient)
 	dx := (endPos.X - startPos.X)
 	dy := (endPos.Y - startPos.Y)
 	t := (e.lifeTime / e.maxLife)
-	
+
 	for i := 0; i < count; i++ {
-		// 位置を計算 (後ろは遅れる)
-		// 矩形を描く
 		x := startPos.X + dx*float32(i)
-		y1 := startPos.Y + dy * easeHalfLinear(t, float32(count - i) / float32(count) * 0.5 + 0.5)
-		y2 := startPos.Y + dy * easeHalfLinear(t, float32(count - i) / float32(count) * 0.5)
+		y1 := startPos.Y + dy*easeHalfLinear(t, float32(count-i)/float32(count)*0.5+0.5)
+		y2 := startPos.Y + dy*easeHalfLinear(t, float32(count-i)/float32(count)*0.5)
 
 		var top, bottom float32
 		if y1 < y2 {
@@ -180,19 +174,16 @@ func (e *TransferEffect) Draw(camera *Camera) {
 			top = y2
 			bottom = y1
 		}
-		
-		// サイズは適当に
+
 		size := 8
-		
+
 		tic80.Rect(Round(x)-size/2, Round(top), size, Round(bottom-top), gradient[i])
 	}
-	
+
 	centerX := (startPos.X + endPos.X) / 2
-	centerY := (startPos.Y + dy * (0.25 + t * 0.1))
-	
-	// tの値(0.0〜1.0)をグラデーション配列のインデックスにマッピング
-	colorIndex := int(t * float32(count - 1))
-	
+	centerY := (startPos.Y + dy*(0.25+t*0.1))
+
+	colorIndex := int(t * float32(count-1))
 
 	DrawOutlinedText("<-", Round(centerX)-4, Round(centerY)-3, gradient[colorIndex], 0)
 }
@@ -215,9 +206,9 @@ func NewHoleEffect(x, y float32) *HoleEffect {
 	return &HoleEffect{
 		position: Vector2d{x, y},
 		radius:   7,
-		color:    0, // 黒
+		color:    0,
 		lifeTime: 0,
-		maxLife:  5.0, // 5秒間表示
+		maxLife:  5.0,
 	}
 }
 
@@ -228,7 +219,6 @@ func (e *HoleEffect) Update(dt float32) bool {
 
 func (e *HoleEffect) Draw(camera *Camera) {
 	screenPos := camera.WorldToScreen(e.position)
-	// 画面外なら描画しない簡易チェック
 	if screenPos.X < -20 || screenPos.X > 260 {
 		return
 	}
@@ -248,7 +238,6 @@ func (e *HoleEffect) Draw(camera *Camera) {
 		currentRadius = currentRadius * (remaining / fadeOutTime)
 	}
 
-	// 最小半径は0 (負にならないように)
 	if currentRadius < 0 {
 		currentRadius = 0
 	}

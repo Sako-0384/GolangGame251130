@@ -25,11 +25,8 @@ func (s *TitleScene) Update(dt float32) {
 
 	// Zボタン (Aボタン) でゲーム開始
 	if tic80.Btnp(tic80.BUTTON_A, 60000, 60000) {
-		// ゲームシーンへ遷移
-		// GeneratorFactoryを使って新しいGeneratorを生成
-		// GeneratorFactoryを直接渡す(Game内で生成される)
 		newGame := NewGame(s.genFactory)
-		
+
 		newGame.SetSceneManager(s.sceneManager)
 		s.sceneManager.ChangeScene(newGame)
 	}
@@ -44,12 +41,12 @@ func (s *TitleScene) Draw() {
 
 	// 点滅する "PRESS B TO START"
 	if (s.ticks/30)%2 == 0 {
-		tic80.Print("PRESS B TO START", 75, 60, tic80.NewPrintOptions().SetColor(12))
+		tic80.Print("PRESS A TO START", 75, 60, tic80.NewPrintOptions().SetColor(12))
 	}
 
 	// 操作説明など
-	tic80.Print("B: MOVE UPPER PLAYER", 60, 85, tic80.NewPrintOptions().SetColor(11))
-	tic80.Print("A: MOVE LOWER PLAYER", 60, 95, tic80.NewPrintOptions().SetColor(9))
+	tic80.Print("A: MOVE UPPER PLAYER", 60, 85, tic80.NewPrintOptions().SetColor(11))
+	tic80.Print("B: MOVE LOWER PLAYER", 60, 95, tic80.NewPrintOptions().SetColor(9))
 	tic80.Print("X: SWAP PICKAXE", 60, 105, tic80.NewPrintOptions().SetColor(4))
 
 	// Gopher Copyright

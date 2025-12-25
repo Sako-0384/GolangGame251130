@@ -42,14 +42,14 @@ func (l *Line) Update(dt float32) {
 			if l.items[i].IsObstacle() {
 				// HardRock判定
 				_, isHardRock := l.items[i].(*HardRock)
-				
+
 				// Rock/GoldRock: ツルハシ所持状態をチェック
 				if !isHardRock && hasPickaxe {
 					// ツルハシ所持: Rockを破壊（削除）
 					if _, ok := l.items[i].(*GoldRock); ok {
 						// GoldRock破壊ボーナス
 						l.game.score += 500
-						l.game.AddEffect(NewFloatingTextEffect("+500", playerPos.X, playerPos.Y-10, 12)) // 12=Light Blue
+						l.game.AddEffect(NewPoppingTextEffect("+500", playerPos.X, playerPos.Y-10, 4))
 						// SFX: GoldRock (11)
 						tic80.Sfx(tic80.NewSoundEffectOptions().SetId(11).SetNote(64))
 						// パーティクルを散らす
@@ -62,23 +62,21 @@ func (l *Line) Update(dt float32) {
 						tic80.Sfx(tic80.NewSoundEffectOptions().SetId(12).SetNote(64))
 						// パーティクルを散らす (グレー: 13)
 						for k := 0; k < 10; k++ {
-							l.game.AddEffect(NewParticleEffect(playerPos.X+8, playerPos.Y+8, 13)) 
+							l.game.AddEffect(NewParticleEffect(playerPos.X+8, playerPos.Y+8, 13))
 						}
 					}
 					continue
 				} else {
 					// ツルハシ非所持 または HardRock: エネルギー減少
-					l.game.AddEnergy(-30) // エネルギー減少
-					l.game.AddEffect(NewFloatingTextEffect("-30", playerPos.X, playerPos.Y-10, 6)) // 6=Red
-					// SFX: Rock Damage (10)
+					l.game.AddEnergy(-30)
+					l.game.AddEffect(NewPoppingTextEffect("-30", playerPos.X, playerPos.Y-10, 8))
 					tic80.Sfx(tic80.NewSoundEffectOptions().SetId(10).SetNote(40))
-					l.player.hurtTimer = 0.5 // 0.5秒間揺れる
+					l.player.hurtTimer = 0.5
 					continue
 				}
 			} else {
-				// Food: 取得して削除
-				l.game.AddEnergy(20) // エネルギー回復
-				l.game.AddEffect(NewFloatingTextEffect("+20", playerPos.X, playerPos.Y-10, 11)) // 11=Cyan/Greenish
+				l.game.AddEnergy(20)
+				l.game.AddEffect(NewPoppingTextEffect("+20", playerPos.X, playerPos.Y-10, 5))
 				// SFX: Food (08)
 				tic80.Sfx(tic80.NewSoundEffectOptions().SetId(8).SetNote(64))
 				continue
@@ -121,10 +119,7 @@ func (l *Line) GetLaneY(lane int) float32 {
 	return lineY + laneOffset
 }
 
-
 func (l *Line) Draw(camera *Camera) {
-	// TODO: draw bg
-
 	// アイテム描画
 	for i := range l.items {
 		l.items[i].Draw(camera)
