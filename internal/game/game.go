@@ -75,6 +75,7 @@ func (g *Game) SetGameOver() {
 	g.gameOver = true
 	// Stop music
 	tic80.Music(tic80.NewMusicOptions().SetTrack(-1))
+	tic80.Sfx(tic80.NewSoundEffectOptions().SetId(10).SetNote(40))
 }
 
 func (g *Game) Speed() float32 {
@@ -268,9 +269,6 @@ func (g *Game) Draw() {
 	tic80.Cls(13)
 
 	// 背景マップ描画
-	// カメラ位置に合わせてマップを表示範囲分だけ描画
-	// WorldToScreenは画面中央(120)にCameraPosが来るようになっているため、
-	// マップ描画の開始位置（左端）は CameraPos - 120 となる。
 	startWorldX := g.camera.Position.X - 120
 	// Roundを使って整数座標に丸める（スプライトと合わせるため）
 	startWorldX_Int := Round(startWorldX)

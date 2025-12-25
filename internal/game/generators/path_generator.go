@@ -57,20 +57,11 @@ func (g *PathGenerator) SpawnItem(gameInst *game.Game) {
 		// Randomize parameters scaling with level
 		// Level 1 -> 10 Scaling
 
-		// LaneSwitchChance: 0-20% -> 10-40%
 		g.currentChunk.LaneSwitchChance = getScaledValue(level, 0, 10, 5, 30)
-
-		// LineSwitchChance: 0-10% -> 5-20%
 		g.currentChunk.LineSwitchChance = getScaledValue(level, 0, 5, 5, 20)
-
-		// RockSpawnRate: 30-80% -> 60-90%
 		g.currentChunk.RockSpawnRate = getScaledValue(level, 10, 20, 30, 60)
-
-		// FoodSpawnRate: 0-30% -> 0-10% (Decrease)
-		g.currentChunk.FoodSpawnRate = getScaledValue(level, 0, 30, 0, 10)
-
-		// ObstacleDensity: 20-60% -> 50-90%
-		g.currentChunk.ObstacleDensity = getScaledValue(level, 20, 60, 50, 90)
+		g.currentChunk.FoodSpawnRate = getScaledValue(level, 0, 20, 0, 10)
+		g.currentChunk.ObstacleDensity = getScaledValue(level, 20, 40, 30, 80)
 	}
 	g.chunkRemaining--
 	params := g.currentChunk
@@ -128,50 +119,36 @@ func (g *PathGenerator) SpawnItem(gameInst *game.Game) {
 					// Target Path: Spawn Rock/GoldRock based on RockSpawnRate
 					r := game.RandomIntn(100)
 					if r < params.RockSpawnRate {
-						// Within spawn rate: decide Rock vs GoldRock
-						if game.RandomIntn(100) < 10 { // 10% chance for Gold
+						if game.RandomIntn(100) < 10 {
 							line.AddItem(game.NewGoldRock(line, spawnX, lane))
 						} else {
 							line.AddItem(game.NewRock(line, spawnX, lane))
 						}
 					} else {
-						// Empty or rarely Food?
-						// Let's use FoodSpawnRate slightly here too? Or keep it mostly rocks?
-						// Plan says: "Rocks ... (or Air)".
-						// Let's allow a small chance of food even on Rock path if rock didn't spawn?
-						// Nah, keep it simple.
 					}
 				} else {
-					// Non-Target Path: Safe.
-					// Spawn Food based on FoodSpawnRate
 					if game.RandomIntn(100) < params.FoodSpawnRate {
 						line.AddItem(game.NewFood(line, spawnX, lane))
 					}
-					// else Air
 				}
 				continue
 			}
 
-			// --- Off-Path Logic ---
-			// Obstacle density check
 			if game.RandomIntn(100) < params.ObstacleDensity {
-				// Spawn something
 				r := game.RandomIntn(100)
 				if r < 40 {
 					line.AddItem(game.NewRock(line, spawnX, lane))
 				} else if r < 70 {
-					line.AddItem(game.NewHardRock(line, spawnX, lane)) // Indestructible
+					line.AddItem(game.NewHardRock(line, spawnX, lane))
 				} else if r < 85 {
 					line.AddItem(game.NewGoldRock(line, spawnX, lane))
 				} else {
-					line.AddItem(game.NewFood(line, spawnX, lane)) // Food in dangerous spot
+					line.AddItem(game.NewFood(line, spawnX, lane))
 				}
 			}
-			// else Air
 		}
 	}
 
-	// Advance grid
 	g.nextSpawnX += gridSize
 }
 
@@ -179,12 +156,7 @@ func (g *PathGenerator) OnCoordinateReset(offset float32) {
 	g.nextSpawnX -= offset
 }
 
-// getScaledValue returns a random value within a range that scales with level.
-// level: Current game level (1 to 10 target).
-// minV, maxV: Range at Level 1.
-// minTarget, maxTarget: Range at Level 10.
 func getScaledValue(level, minV, maxV, minTarget, maxTarget int) int {
-	// Clamp level to 1-10 effectively for interpolation
 	if level < 1 {
 		level = 1
 	}
