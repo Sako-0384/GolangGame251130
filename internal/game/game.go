@@ -29,9 +29,11 @@ type Game struct {
 	goalDistance  float32          // ゴールまでの距離
 	totalDistance float32          // 実際の総移動距離
 	level         int              // 現在のレベル（周回数 + 1）
-	effects       *EffectManager
-	bgEffects     *EffectManager
-	sceneManager  *SceneManager
+	effects          *EffectManager
+	bgEffects        *EffectManager
+	sceneManager     *SceneManager
+	gameOverTimer    float32 // ゲームオーバー後の経過時間
+	canReturnToTitle bool    // タイトルに戻れるかどうか
 }
 
 func NewGame(genFactory GeneratorFactory) *Game {
@@ -46,10 +48,12 @@ func NewGame(genFactory GeneratorFactory) *Game {
 		energy:        100, // 初期エネルギー
 		gameOver:      false,
 		goalDistance:  3000, // ゴール地点 (3000ピクセル)
-		totalDistance: 0,
-		level:         1,
-		effects:       NewEffectManager(),
-		bgEffects:     NewEffectManager(),
+		totalDistance:    0,
+		level:            1,
+		effects:          NewEffectManager(),
+		bgEffects:        NewEffectManager(),
+		gameOverTimer:    0,
+		canReturnToTitle: false,
 	}
 
 	// 上下2つのラインを作成
@@ -57,6 +61,20 @@ func NewGame(genFactory GeneratorFactory) *Game {
 	g.lines = append(g.lines, NewLine(g, 1)) // 下ライン
 
 	return g
+}
+
+func (g *Game) OnEnter() {
+	// BGM 1 (Game) Loop
+	tic80.Music(tic80.NewMusicOptions().SetTrack(1))
+}
+
+func (g *Game) SetGameOver() {
+	if g.gameOver {
+		return
+	}
+	g.gameOver = true
+	// Stop music
+	tic80.Music(tic80.NewMusicOptions().SetTrack(-1))
 }
 
 func (g *Game) Speed() float32 {
@@ -78,10 +96,19 @@ func (g *Game) GetCameraX() float32 {
 func (g *Game) Update(dt float32) {
 	// ゲームオーバーまたはクリア時は更新しない
 	if g.gameOver {
+		g.gameOverTimer += dt
+
+		// 約1.5秒後にタイトルに戻れるようにする
+		if g.gameOverTimer > 1.5 {
+			g.canReturnToTitle = true
+		}
+
 		// ゲームオーバー時にボタン入力でタイトルへ
-		if tic80.Btnp(tic80.BUTTON_A, 60000, 60000) || tic80.Btnp(tic80.BUTTON_B, 60000, 60000) {
-			if g.sceneManager != nil {
-				g.sceneManager.ChangeScene(NewTitleScene(g.sceneManager, g.genFactory))
+		if g.canReturnToTitle {
+			if tic80.Btnp(tic80.BUTTON_A, 60000, 60000) || tic80.Btnp(tic80.BUTTON_B, 60000, 60000) {
+				if g.sceneManager != nil {
+					g.sceneManager.ChangeScene(NewTitleScene(g.sceneManager, g.genFactory))
+				}
 			}
 		}
 		return
@@ -117,7 +144,7 @@ func (g *Game) Update(dt float32) {
 
 	if g.energy <= 0 {
 		g.energy = 0
-		g.gameOver = true
+		g.SetGameOver()
 		return
 	}
 
@@ -226,7 +253,7 @@ func (g *Game) AddEnergy(amount float32) {
 	}
 	if g.energy <= 0 {
 		g.energy = 0
-		g.gameOver = true
+		g.SetGameOver()
 	}
 }
 

@@ -83,3 +83,17 @@ func Clamp(v, min, max float64) float64 {
 	}
 	return v
 }
+
+// EaseInOutCubic applies cubic easing in/out to t [0, 1].
+func EaseInOutCubic(t float32) float32 {
+	if t < 0.5 {
+		return 4 * t * t * t
+	}
+	t = t - 1
+	return 1 + 4*t*t*t
+}
+
+// Lerp linearly interpolates between start and end by t.
+func Lerp(start, end, t float32) float32 {
+	return start + (end-start)*t
+}

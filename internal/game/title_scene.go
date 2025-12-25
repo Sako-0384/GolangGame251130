@@ -20,6 +20,11 @@ func NewTitleScene(sm *SceneManager, genFactory GeneratorFactory) *TitleScene {
 	}
 }
 
+func (s *TitleScene) OnEnter() {
+	// BGM 0 (Title) Loop
+	tic80.Music(tic80.NewMusicOptions().SetTrack(0))
+}
+
 func (s *TitleScene) Update(dt float32) {
 	s.ticks++
 

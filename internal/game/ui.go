@@ -17,7 +17,16 @@ func (g *Game) DrawUI() {
 
 	// --- Column 1: Score ---
 	scoreText := "SC:" + intToString(int(g.score))
-	tic80.Print(scoreText, 2, baseY, tic80.NewPrintOptions().SetColor(12))
+	
+	// ゲームオーバーアニメーション中（1.0秒以降）はデフォルトの表示を隠す
+	shouldDrawDefaultScore := true
+	if g.gameOver && g.gameOverTimer > 1.0 {
+		shouldDrawDefaultScore = false
+	}
+
+	if shouldDrawDefaultScore {
+		DrawOutlinedText(scoreText, 2, baseY, 4, 14)
+	}
 
 	// --- Column 2: Progress Bar ---
 	progressWidth := 70
@@ -76,8 +85,40 @@ func (g *Game) DrawUI() {
 
 	// --- Overlays ---
 
-	// ゲームオーバー表示
+	// ゲームオーバー表示とアニメーション
 	if g.gameOver {
-		tic80.Print("GAME OVER", 80, 50, tic80.NewPrintOptions().SetColor(6))
+		// 1. GAME OVER テキスト (0.3秒後に表示)
+		if g.gameOverTimer > 0.3 {
+			text := "GAME OVER"
+			DrawOutlinedText(text, 96, 50, 6, 12)
+		}
+
+		// 2. スコア位置のアニメーション
+		targetX := float32(240/2 - 20)
+		targetY := float32(66)
+
+		currentX := float32(2)
+		currentY := float32(baseY)
+
+		if g.gameOverTimer > 1.0 {
+			t := (g.gameOverTimer - 1.0) / 0.5
+			t = float32(Clamp(float64(t), 0.0, 1.0))
+			easeT := EaseInOutCubic(t)
+
+			drawX := Lerp(currentX, targetX, easeT)
+			drawY := Lerp(currentY, targetY, easeT)
+
+			DrawOutlinedText(scoreText, int(drawX), int(drawY), 4, 14)
+
+			if g.canReturnToTitle {
+				color := 12
+				if (int(g.gameOverTimer*2) % 2) == 0 {
+					color = 0
+				}
+				prompt := "PRESS BUTTON"
+				promptWidth := tic80.Print(prompt, 0, -10, tic80.NewPrintOptions())
+				tic80.Print(prompt, (240-promptWidth)/2, 80, tic80.NewPrintOptions().SetColor(color))
+			}
+		}
 	}
 }
